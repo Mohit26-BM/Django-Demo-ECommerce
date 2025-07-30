@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: ecommerce
+    env: python
+    buildCommand: ""
+    startCommand: gunicorn ecommerce.wsgi:application
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: ecommerce.settings
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: False
+      - key: ALLOWED_HOSTS
+        value: YOUR_RENDER_DOMAIN
