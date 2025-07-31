@@ -40,7 +40,6 @@ ecommerce/
 ├── media/              # Uploaded media
 ├── manage.py
 ├── requirements.txt
-├── build.sh
 ├── render.yaml
 └── README.md
 ```
