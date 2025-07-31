@@ -106,4 +106,4 @@ MIT License. Feel free to use and customize this project.
 
 ## 👨‍💻 Author
 
-Created by [Your Name](https://github.com/Mohit26-BM)
+Created by [Mohit](https://github.com/Mohit26-BM)
