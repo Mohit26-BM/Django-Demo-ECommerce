@@ -1,43 +1,46 @@
-# 🛒 Django E-commerce Website
+# Django E-commerce Website
 
-A demo functional e-commerce website built using Django, deployed on Render.
-
-## 🌐 Live Demo
-
-👉 [Visit the Site](https://django-demo-ecommerce.onrender.com/)
+A functional demo e-commerce website built using Django and deployed on Render.
 
 ---
 
-## 📌 Features
+## Live Demo
 
-- User authentication (login, logout)
-- Product listing and details
-- Add to cart (basic)
-- Static and media file handling
-- Admin dashboard for product management
-- Bootstrap styling
+Visit the site:
+[https://django-demo-ecommerce.onrender.com/](https://django-demo-ecommerce.onrender.com/)
 
 ---
 
-## 🚀 Tech Stack
+## Features
 
-- Python 3.12.11
-- Django 5.2.4
-- SQLite (development)
-- Render (hosting)
-- Bootstrap 5 (frontend)
+* User authentication (login, logout)
+* Product listing and detail pages
+* Basic add-to-cart functionality
+* Static and media file handling
+* Admin dashboard for product management
+* Responsive design using Bootstrap
 
 ---
 
-## 📂 Project Structure
+## Tech Stack
 
-```
+* Python 3.12.11
+* Django 5.2.4
+* SQLite (development database)
+* Render (deployment platform)
+* Bootstrap 5 (frontend framework)
+
+---
+
+## Project Structure
+
+```id="doxu3h"
 ecommerce/
-├── ecommerce/          # Project settings
-├── shop/               # Main app for products
+├── ecommerce/          # Project configuration
+├── shop/               # Main application (products, views, models)
 ├── templates/          # HTML templates
-├── static/             # CSS, JS, images
-├── media/              # Uploaded media
+├── static/             # CSS, JavaScript, images
+├── media/              # Uploaded files
 ├── manage.py
 ├── requirements.txt
 ├── render.yaml
@@ -46,13 +49,15 @@ ecommerce/
 
 ---
 
-## ⚙️ Deployment (Render)
+## Deployment (Render)
 
-### 1. Files needed:
-- `requirements.txt`
-- `render.yaml`
+### Required Files
 
-### 2. `render.yaml`
+* `requirements.txt`
+* `render.yaml`
+
+### render.yaml Configuration
+
 ```yaml
 services:
   - type: web
@@ -73,23 +78,23 @@ services:
 
 ---
 
-## 🔐 Environment Variables
+## Environment Variables
 
-Set these in Render dashboard:
+Configure the following variables in the Render dashboard:
 
-- `SECRET_KEY`: your Django secret key
-- `DEBUG`: `False`
-- `DJANGO_SETTINGS_MODULE`: `ecommerce.settings`
+* `SECRET_KEY`: Django secret key
+* `DEBUG`: False
+* `DJANGO_SETTINGS_MODULE`: ecommerce.settings
 
 ---
 
-## 🧪 Development Setup
+## Development Setup
 
 ```bash
 git clone https://github.com/your-username/your-repo.git
 cd ecommerce
 python -m venv env
-source env/bin/activate   # or .\env\Scripts\activate on Windows
+source env/bin/activate   # On Windows: .\env\Scripts\activate
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver
@@ -97,12 +102,7 @@ python manage.py runserver
 
 ---
 
-## 📝 License
+## Author
 
-MIT License. Feel free to use and customize this project.
-
----
-
-## 👨‍💻 Author
-
-Created by [Mohit](https://github.com/Mohit26-BM)
+Created by Mohit
+[https://github.com/Mohit26-BM](https://github.com/Mohit26-BM)
