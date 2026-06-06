@@ -1,26 +1,89 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>My Shop</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-</head>
-<body class="container mt-4">
-    <h1 class="mb-4">Products</h1>
-    <div class="row">
-        {% for product in products %}
-        <div class="col-md-4 mb-4">
-            <div class="card"> <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-fluid" style="width:200px; height:200px; object-fit:cover;"><img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-image img-fluid" />
+{% extends "shop/base.html" %}
 
-                <div class="card-body">
-                    <h5 class="card-title">{{ product.name }}</h5>
-                    <p class="card-text">₹{{ product.price }}</p>
-                    <a href="{% url 'product_detail' product.pk %}" class="btn btn-primary">View Product</a>
-                </div>
+{% block title %}
+  {% if active_category %}{{ active_category.name }} — {% endif %}Products — MyShop
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <h1 class="page-title">
+    {% if active_category %}{{ active_category.name }}{% else %}All Products{% endif %}
+  </h1>
+  <p class="page-subtitle">{{ products|length }} product{{ products|length|pluralize }} available</p>
+</div>
+
+<!-- Filters + Sort Bar -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-6">
+  <div class="filter-pills">
+    <a href="{% url 'product_list' %}"
+       class="filter-pill {% if not active_category %}active{% endif %}">
+      All
+    </a>
+    {% for category in categories %}
+      <a href="{% url 'category_products' category.slug %}"
+         class="filter-pill {% if active_category and active_category.slug == category.slug %}active{% endif %}">
+        {{ category.name }}
+      </a>
+    {% endfor %}
+  </div>
+
+  <form method="get" action="" class="d-flex align-items-center gap-2">
+    {% if active_category %}
+      <input type="hidden" name="category" value="{{ active_category.slug }}">
+    {% endif %}
+    <label for="sort" class="text-muted" style="font-size:var(--font-size-sm);white-space:nowrap;">Sort by</label>
+    <select name="sort" id="sort" class="sort-select" onchange="this.form.submit()">
+      <option value="" {% if not sort %}selected{% endif %}>Default</option>
+      <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+      <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+      <option value="name" {% if sort == 'name' %}selected{% endif %}>Name A–Z</option>
+    </select>
+  </form>
+</div>
+
+<!-- Product Grid -->
+{% if products %}
+  <div class="row g-4">
+    {% for product in products %}
+      <div class="col-6 col-md-4 col-lg-3">
+        <div class="product-card">
+          <div class="product-img-wrap">
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy">
+          </div>
+          <div class="card-body">
+            <p class="product-detail-category">{{ product.category.name }}</p>
+            <h6 class="product-name">{{ product.name }}</h6>
+            <p class="product-price">₹{{ product.price }}</p>
+            <div class="product-actions">
+              <a href="{% url 'product_detail' product.pk %}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-eye"></i> View
+              </a>
+              {% if user.is_authenticated %}
+                <form method="post" action="{% url 'add_to_cart' product.id %}" class="flex-1">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-success btn-sm w-100">
+                    <i class="bi bi-bag-plus"></i> Add
+                  </button>
+                </form>
+              {% else %}
+                <a href="{% url 'login' %}" class="btn btn-success btn-sm flex-1">
+                  <i class="bi bi-bag-plus"></i> Add
+                </a>
+              {% endif %}
             </div>
+          </div>
         </div>
-        {% endfor %}
-    </div>
-</body>
-</html>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon"><i class="bi bi-box-seam"></i></div>
+    <h4>No products found</h4>
+    <p>Try a different category or check back later.</p>
+    <a href="{% url 'product_list' %}" class="btn btn-primary">View all products</a>
+  </div>
+{% endif %}
+
+{% endblock %}

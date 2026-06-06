@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
+  <!-- Rounded background -->
+  <rect width="40" height="40" rx="9" fill="#0D9488"/>
+  <!-- Bag handle -->
+  <path d="M14 17c0-3.314 2.686-6 6-6s6 2.686 6 6"
+        stroke="white" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+  <!-- Bag body -->
+  <path d="M9 17h22l-2.2 15H11.2L9 17z" fill="white" fill-opacity="0.92"/>
+  <!-- Heart cutout inside bag -->
+  <path d="M20 28.5l-5.2-4.72C13.2 22.4 13.2 20.1 14.8 18.8c1.6-1.3 3.9-.75 5.2 1.3 1.3-2.05 3.6-2.6 5.2-1.3 1.6 1.3 1.6 3.6 0 5L20 28.5z"
+        fill="#0D9488"/>
+</svg>

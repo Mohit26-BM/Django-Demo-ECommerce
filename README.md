@@ -1,108 +1,153 @@
-# Django E-commerce Website
+# MyShop — Django E-Commerce
 
-A functional demo e-commerce website built using Django and deployed on Render.
+A full-featured e-commerce web app built with Django 5.2 and Bootstrap 5.
 
----
+**Live demo:** [https://django-demo-ecommerce.onrender.com/](https://django-demo-ecommerce.onrender.com/)
 
-## Live Demo
+## Tech Stack
 
-Visit the site:
-[https://django-demo-ecommerce.onrender.com/](https://django-demo-ecommerce.onrender.com/)
+| Layer | Technology |
+| --- | --- |
+| Backend | Python 3.12, Django 5.2 |
+| Database | SQLite (dev) / PostgreSQL-ready (psycopg2 included) |
+| Frontend | Bootstrap 5.3, Bootstrap Icons, Inter font |
+| Static files | WhiteNoise |
+| Production server | Gunicorn |
+| Image handling | Pillow |
 
 ---
 
 ## Features
 
-* User authentication (login, logout)
-* Product listing and detail pages
-* Basic add-to-cart functionality
-* Static and media file handling
-* Admin dashboard for product management
-* Responsive design using Bootstrap
+### Auth
 
----
+- **Sign up** — Django `UserCreationForm`, auto-login on registration
+- **Sign in / Sign out** — session-based auth
+- **Admin panel** — `/admin/` (create a superuser first, see setup below)
 
-## Tech Stack
+### Browsing
 
-* Python 3.12.11
-* Django 5.2.4
-* SQLite (development database)
-* Render (deployment platform)
-* Bootstrap 5 (frontend framework)
+- Home page with hero carousel (banners), featured products, deals, and per-category sections
+- Product listing with sort (price asc/desc, name)
+- Category filtering
+- Product detail with related products
+- Search (name + description)
+
+### Cart
+
+- Session-based cart — works without a database, persists across pages
+- Add, update quantity, remove items
+- Cart badge in navbar shows item count
+
+### Checkout & Orders
+
+- Checkout page with payment method selection (COD / UPI / Card)
+- **Payment is simulated** — selecting UPI or Card records the method but does not process any real transaction. Orders are created immediately as "Pending".
+- Order confirmation page shown after placing
+- Full order history with status tracking (Pending → Paid → Shipped → Delivered)
+- Cancel order (Pending only), request return (Delivered only), reorder, delete from history
+
+### Wishlist
+
+- Add / remove products
+- Dedicated wishlist page
+- Duplicate prevention via `unique_together` constraint
+
+### Admin
+
+All models are registered with customised admin views:
+
+- **Products** — inline edit `is_featured` / `is_active`, filter by category
+- **Orders** — view line items inline, filter by status
+- **Banners** — toggle active, reorder
+- **Categories, Wishlist** — search and list views
 
 ---
 
 ## Project Structure
 
-```id="doxu3h"
+```text
 ecommerce/
-├── ecommerce/          # Project configuration
-├── shop/               # Main application (products, views, models)
-├── templates/          # HTML templates
-├── static/             # CSS, JavaScript, images
-├── media/              # Uploaded files
+├── ecommerce/          # Project config (settings, urls, wsgi)
+├── shop/               # Main app
+│   ├── management/
+│   │   └── commands/
+│   │       └── seed_shop.py    # Seeds products from DummyJSON API
+│   ├── migrations/
+│   ├── static/shop/
+│   │   ├── css/
+│   │   │   ├── main.css        # Design tokens, layout, components
+│   │   │   └── ecommerce.css   # Page-specific styles
+│   │   ├── js/main.js          # Scroll-reveal, ripple, back-to-top, etc.
+│   │   └── img/logo.svg
+│   ├── templates/
+│   │   ├── registration/       # login.html, signup.html
+│   │   └── shop/               # All other page templates
+│   ├── admin.py
+│   ├── context_processors.py   # Injects categories into every template
+│   ├── models.py               # Category, Product, Banner, Order, OrderItem, Wishlist
+│   ├── urls.py
+│   ├── utils.py                # build_cart_items helper
+│   └── views.py
+├── media/              # Uploaded/downloaded images
+├── db.sqlite3
 ├── manage.py
 ├── requirements.txt
-├── render.yaml
-└── README.md
+└── render.yaml         # Render.com deployment config
 ```
 
 ---
 
-## Deployment (Render)
+## Setup
 
-### Required Files
+### Prerequisites
 
-* `requirements.txt`
-* `render.yaml`
-
-### render.yaml Configuration
-
-```yaml
-services:
-  - type: web
-    name: ecommerce
-    env: python
-    buildCommand: ""
-    startCommand: gunicorn ecommerce.wsgi:application
-    envVars:
-      - key: DJANGO_SETTINGS_MODULE
-        value: ecommerce.settings
-      - key: SECRET_KEY
-        generateValue: true
-      - key: DEBUG
-        value: False
-      - key: ALLOWED_HOSTS
-        value: YOUR_RENDER_DOMAIN
-```
-
----
-
-## Environment Variables
-
-Configure the following variables in the Render dashboard:
-
-* `SECRET_KEY`: Django secret key
-* `DEBUG`: False
-* `DJANGO_SETTINGS_MODULE`: ecommerce.settings
-
----
-
-## Development Setup
+- Python 3.10+ (or activate your conda base)
+- The packages in `requirements.txt`
 
 ```bash
-git clone https://github.com/your-username/your-repo.git
-cd ecommerce
-python -m venv env
-source env/bin/activate   # On Windows: .\env\Scripts\activate
 pip install -r requirements.txt
+```
+
+### First run
+
+```bash
 python manage.py migrate
+python manage.py createsuperuser       # for /admin access
+python manage.py seed_shop             # seeds 100 products from DummyJSON API
 python manage.py runserver
 ```
+
+Open `http://127.0.0.1:8000`
+
+### Seed options
+
+```bash
+python manage.py seed_shop             # 100 products (default)
+python manage.py seed_shop --all       # all ~194 products
+python manage.py seed_shop --keep-banners   # don't overwrite banner data
+python manage.py seed_shop --keep-images    # skip re-downloading existing images
+```
+
+---
+
+## Payment
+
+Payment is **not integrated with any gateway**. The checkout form lets users choose a method (COD, UPI, or Card) and the choice is stored on the order record. No money moves and no external API is called. To add real payments, integrate Razorpay or Stripe at the `checkout` view in `views.py`.
+
+---
+
+## Deployment (Render.com)
+
+1. Set `DEBUG=False` and `ALLOWED_HOSTS=your-app.onrender.com` in environment variables
+2. Set a strong `SECRET_KEY`
+3. The build command in `render.yaml` runs `collectstatic` and `migrate` automatically
+4. WhiteNoise serves static files in production — no separate CDN needed
+
+> Media files (product images) are **not persistent** on Render's free tier. For production use an object store like AWS S3 or Cloudflare R2.
 
 ---
 
 ## Author
 
-Created by Mohit
-[https://github.com/Mohit26-BM](https://github.com/Mohit26-BM)
+Created by Mohit — [github.com/Mohit26-BM](https://github.com/Mohit26-BM)
