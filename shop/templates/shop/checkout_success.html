@@ -1,11 +1,67 @@
 {% extends "shop/base.html" %}
 
-{% block title %}Order Confirmed - MyShop{% endblock %}
+{% block title %}Order Confirmed — MyShop{% endblock %}
 
 {% block content %}
-<div class="text-center mt-5">
-  <h2>Thank you for your order!</h2>
-  <p>Your order has been successfully placed.</p>
-  <a href="{% url 'home' %}" class="btn btn-primary mt-3">Back to Home</a>
+<div class="row justify-content-center" style="padding: var(--space-12) 0;">
+  <div class="col-md-6 col-lg-5">
+    <div class="card text-center" style="padding:var(--space-10);">
+      <div class="success-icon">
+        <i class="bi bi-check-lg"></i>
+      </div>
+
+      <h2 style="font-weight:800;font-size:var(--font-size-2xl);letter-spacing:-0.03em;margin-bottom:var(--space-3);">
+        Order Confirmed!
+      </h2>
+
+      <p class="text-muted" style="font-size:var(--font-size-sm);margin-bottom:var(--space-2);">
+        Order <strong>#{{ order.id }}</strong>
+      </p>
+
+      <div class="d-flex justify-content-center gap-3 mb-6 flex-wrap" style="margin-bottom:var(--space-8);">
+        <span class="status-badge status-paid">
+          <i class="bi bi-check-circle"></i> Confirmed
+        </span>
+        <span class="status-badge status-pending">
+          <i class="bi bi-{% if order.payment_method == 'UPI' %}phone{% elif order.payment_method == 'CARD' %}credit-card{% else %}cash-stack{% endif %}"></i>
+          {{ order.get_payment_method_display }}
+        </span>
+      </div>
+
+      <p class="text-muted mb-8" style="font-size:var(--font-size-sm);margin-bottom:var(--space-8);">
+        Thanks for your purchase. We're processing your order and will ship it soon.
+        You can track your order status below.
+      </p>
+
+      <!-- Mini tracking timeline -->
+      <div class="order-timeline text-start mb-6" style="margin-bottom:var(--space-6);">
+        <div class="timeline-step done">
+          <div class="timeline-dot"><i class="bi bi-check"></i></div>
+          <p class="timeline-label">Order Placed</p>
+        </div>
+        <div class="timeline-step">
+          <div class="timeline-dot"></div>
+          <p class="timeline-label">Payment Confirmed</p>
+        </div>
+        <div class="timeline-step">
+          <div class="timeline-dot"></div>
+          <p class="timeline-label">Shipped</p>
+        </div>
+        <div class="timeline-step">
+          <div class="timeline-dot"></div>
+          <p class="timeline-label">Delivered</p>
+        </div>
+      </div>
+
+      <div class="d-flex flex-column gap-3">
+        <a href="{% url 'order_history' %}" class="btn btn-primary btn-lg">
+          <i class="bi bi-clock-history"></i> Track Order
+        </a>
+        <a href="{% url 'product_list' %}" class="btn btn-outline-secondary">
+          Continue Shopping
+        </a>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}

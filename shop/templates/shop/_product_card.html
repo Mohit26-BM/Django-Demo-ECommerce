@@ -1,0 +1,45 @@
+<div class="product-card">
+  <div class="product-img-wrap">
+    {% if product.discount_percent %}
+      <span class="discount-badge">{{ product.discount_percent }}% OFF</span>
+    {% endif %}
+    {% if product.image %}
+      <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy">
+    {% else %}
+      <div style="width:100%;height:100%;background:var(--color-surface-2);display:flex;align-items:center;justify-content:center;">
+        <i class="bi bi-image" style="font-size:2rem;color:var(--color-text-subtle);"></i>
+      </div>
+    {% endif %}
+  </div>
+  <div class="card-body">
+    <p class="product-detail-category">{{ product.category.name }}</p>
+    <h6 class="product-name">{{ product.name }}</h6>
+    <div class="d-flex align-items-center gap-2 mb-2">
+      <span class="rating-pill"><i class="bi bi-star-fill"></i> {{ product.rating }}</span>
+      <span class="review-count">({{ product.review_count|floatformat:0 }})</span>
+    </div>
+    <p class="product-price" style="margin-bottom:2px;">₹{{ product.price }}</p>
+    {% if product.original_price %}
+      <p style="font-size:var(--font-size-xs);color:var(--color-text-muted);text-decoration:line-through;margin-bottom:var(--space-2);">
+        ₹{{ product.original_price }}
+      </p>
+    {% endif %}
+    <div class="product-actions">
+      <a href="{% url 'product_detail' product.pk %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-eye"></i>
+      </a>
+      {% if user.is_authenticated %}
+        <form method="post" action="{% url 'add_to_cart' product.id %}" class="flex-1">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-success btn-sm w-100">
+            <i class="bi bi-bag-plus"></i> Add
+          </button>
+        </form>
+      {% else %}
+        <a href="{% url 'login' %}" class="btn btn-success btn-sm flex-1">
+          <i class="bi bi-bag-plus"></i> Add
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</div>

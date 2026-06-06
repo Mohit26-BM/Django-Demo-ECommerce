@@ -1,0 +1,175 @@
+{% extends "shop/base.html" %}
+
+{% block title %}My Orders — MyShop{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <h1 class="page-title">My Orders</h1>
+  {% if orders %}
+    <p class="page-subtitle">{{ orders|length }} order{{ orders|length|pluralize }}</p>
+  {% endif %}
+</div>
+
+{% if orders %}
+  {% for order in orders %}
+    <div class="order-card">
+
+      <!-- Header -->
+      <div class="order-card-header">
+        <div>
+          <p class="order-number">Order #{{ order.id }}</p>
+          <p class="order-date">
+            <i class="bi bi-calendar3"></i>
+            {{ order.created_at|date:"F j, Y" }} at {{ order.created_at|date:"g:i A" }}
+          </p>
+        </div>
+        <div class="text-end">
+          {% if order.status == "Pending" %}
+            <span class="status-badge status-pending"><i class="bi bi-clock"></i> Pending</span>
+          {% elif order.status == "Paid" %}
+            <span class="status-badge status-paid"><i class="bi bi-check-circle"></i> Paid</span>
+          {% elif order.status == "Shipped" %}
+            <span class="status-badge status-shipped"><i class="bi bi-truck"></i> Shipped</span>
+          {% elif order.status == "Delivered" %}
+            <span class="status-badge status-delivered"><i class="bi bi-bag-check"></i> Delivered</span>
+          {% elif order.status == "Cancelled" %}
+            <span class="status-badge status-cancelled"><i class="bi bi-x-circle"></i> Cancelled</span>
+          {% elif order.status == "Return Requested" %}
+            <span class="status-badge status-return-requested">
+              <i class="bi bi-arrow-counterclockwise"></i> Return Requested
+            </span>
+          {% endif %}
+          <p style="font-size:var(--font-size-xs);color:var(--color-text-muted);margin-top:4px;">
+            via {{ order.payment_method }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Order Tracking Timeline -->
+      {% if order.status != "Cancelled" %}
+        <div class="order-timeline">
+          <div class="timeline-step {% if order.status == 'Pending' or order.status == 'Paid' or order.status == 'Shipped' or order.status == 'Delivered' or order.status == 'Return Requested' %}done{% endif %}">
+            <div class="timeline-dot"><i class="bi bi-check"></i></div>
+            <p class="timeline-label">Order Placed</p>
+          </div>
+          <div class="timeline-step
+            {% if order.status == 'Paid' %}active
+            {% elif order.status == 'Shipped' or order.status == 'Delivered' or order.status == 'Return Requested' %}done
+            {% endif %}">
+            <div class="timeline-dot">
+              {% if order.status == 'Shipped' or order.status == 'Delivered' or order.status == 'Return Requested' %}
+                <i class="bi bi-check"></i>
+              {% endif %}
+            </div>
+            <p class="timeline-label">Payment Confirmed</p>
+          </div>
+          <div class="timeline-step
+            {% if order.status == 'Shipped' %}active
+            {% elif order.status == 'Delivered' or order.status == 'Return Requested' %}done
+            {% endif %}">
+            <div class="timeline-dot">
+              {% if order.status == 'Delivered' or order.status == 'Return Requested' %}
+                <i class="bi bi-check"></i>
+              {% endif %}
+            </div>
+            <p class="timeline-label">Shipped</p>
+          </div>
+          <div class="timeline-step
+            {% if order.status == 'Delivered' %}active
+            {% elif order.status == 'Return Requested' %}done
+            {% endif %}">
+            <div class="timeline-dot">
+              {% if order.status == 'Return Requested' %}
+                <i class="bi bi-check"></i>
+              {% endif %}
+            </div>
+            <p class="timeline-label">Delivered</p>
+          </div>
+          {% if order.status == 'Return Requested' %}
+            <div class="timeline-step active">
+              <div class="timeline-dot"></div>
+              <p class="timeline-label">Return Requested</p>
+            </div>
+          {% endif %}
+        </div>
+      {% else %}
+        <div class="alert alert-danger" style="margin-bottom:var(--space-4);">
+          <i class="bi bi-x-circle me-2"></i> This order was cancelled.
+        </div>
+      {% endif %}
+
+      <!-- Items -->
+      <ul class="order-items-list">
+        {% for item in order.items.all %}
+          <li>
+            <span>{{ item.quantity }} × {{ item.product.name }}</span>
+            <span>₹{{ item.price }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+
+      <!-- Total -->
+      <div class="order-total-row">
+        <span class="text-muted" style="font-size:var(--font-size-sm);">Order Total</span>
+        <span style="font-weight:700;font-size:var(--font-size-lg);color:var(--color-primary);">
+          ₹{{ order.total }}
+        </span>
+      </div>
+
+      <!-- Actions -->
+      <div class="order-actions">
+        {% if order.status == "Pending" %}
+          <form method="post" action="{% url 'cancel_order' order.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-secondary btn-sm"
+              onclick="return confirm('Cancel this order?')">
+              <i class="bi bi-x"></i> Cancel Order
+            </button>
+          </form>
+        {% endif %}
+
+        {% if order.status == "Delivered" %}
+          <form method="post" action="{% url 'request_return' order.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-secondary btn-sm"
+              onclick="return confirm('Request a return for this order?')">
+              <i class="bi bi-arrow-counterclockwise"></i> Return
+            </button>
+          </form>
+        {% endif %}
+
+        <form method="post" action="{% url 'reorder' order.id %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary btn-sm">
+            <i class="bi bi-bag-plus"></i> Buy Again
+          </button>
+        </form>
+
+        {% if order.status == "Cancelled" or order.status == "Delivered" or order.status == "Return Requested" %}
+          <form method="post" action="{% url 'delete_order' order.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm"
+              style="color:var(--color-danger);background:none;border:none;padding:var(--space-1) var(--space-2);"
+              onclick="return confirm('Remove from history?')">
+              <i class="bi bi-trash3"></i>
+            </button>
+          </form>
+        {% endif %}
+      </div>
+
+    </div>
+  {% endfor %}
+
+{% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon"><i class="bi bi-bag"></i></div>
+    <h4>No orders yet</h4>
+    <p>When you place orders, you'll be able to track them here.</p>
+    <a href="{% url 'product_list' %}" class="btn btn-primary btn-lg">
+      <i class="bi bi-bag"></i> Start Shopping
+    </a>
+  </div>
+{% endif %}
+
+{% endblock %}

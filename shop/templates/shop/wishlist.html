@@ -1,0 +1,60 @@
+{% extends "shop/base.html" %}
+
+{% block title %}Wishlist — MyShop{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <h1 class="page-title">Wishlist</h1>
+  {% if wishlist_items %}
+    <p class="page-subtitle">{{ wishlist_items|length }} saved item{{ wishlist_items|length|pluralize }}</p>
+  {% endif %}
+</div>
+
+{% if wishlist_items %}
+  <div class="row g-4">
+    {% for item in wishlist_items %}
+      <div class="col-6 col-md-4 col-lg-3">
+        <div class="product-card wishlist-card">
+          <!-- Remove button -->
+          <a href="{% url 'remove_from_wishlist' item.product.id %}" class="wishlist-remove"
+             aria-label="Remove from wishlist" title="Remove">
+            <i class="bi bi-x"></i>
+          </a>
+
+          <div class="product-img-wrap">
+            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" loading="lazy">
+          </div>
+          <div class="card-body">
+            <p class="product-detail-category">{{ item.product.category.name }}</p>
+            <h6 class="product-name">{{ item.product.name }}</h6>
+            <p class="product-price">₹{{ item.product.price }}</p>
+            <div class="product-actions">
+              <a href="{% url 'product_detail' item.product.id %}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-eye"></i> View
+              </a>
+              <form method="post" action="{% url 'add_to_cart' item.product.id %}" class="flex-1">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success btn-sm w-100">
+                  <i class="bi bi-bag-plus"></i> Add
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+{% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon"><i class="bi bi-heart"></i></div>
+    <h4>Your wishlist is empty</h4>
+    <p>Save products you love by clicking the heart icon on any product page.</p>
+    <a href="{% url 'product_list' %}" class="btn btn-primary btn-lg">
+      Browse Products
+    </a>
+  </div>
+{% endif %}
+
+{% endblock %}

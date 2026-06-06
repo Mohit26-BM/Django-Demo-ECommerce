@@ -1,138 +1,147 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{% block title %}My Shop{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <style>
-  .product-image {
-    width: 200px;
-    height: 200px;
-    object-fit: cover;
-    display: block;
-    margin: 0 auto;
-  }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}MyShop{% endblock %}</title>
 
- body {
-  background: linear-gradient(135deg, #e6e0f8, #f9e6f7);
-  min-height: 100vh;
-  margin: 0;
-  padding-bottom: 70px; 
-}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <link href="{% static 'shop/css/main.css' %}" rel="stylesheet" />
+  <link href="{% static 'shop/css/ecommerce.css' %}" rel="stylesheet" />
 
-
-  .go-to-cart-link {
-    display: inline-block;
-    padding: 8px 15px;
-    background-color: #28a745;
-    color: white;
-    border-radius: 5px;
-    text-decoration: none;
-    font-weight: 600;
-    transition: background-color 0.3s ease;
-  }
-
-  .go-to-cart-link:hover {
-    background-color: #218838;
-    color: white;
-    text-decoration: none;
-  }
-
-  .fixed-footer {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  z-index: 1030; /* above other content */
-}
-
-body {
-  padding-bottom: 70px; /* space for the footer height */
-}
-
-footer a:hover {
-  color: #0d6efd; /* Bootstrap primary blue on hover */
-  text-decoration: none;
-}
-
-</style>
-
+  {% block extra_css %}{% endblock %}
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<!-- Announcement Bar -->
+<div class="announcement-bar">
+  Free delivery on orders above ₹499 &nbsp;|&nbsp;
+  <a href="{% url 'product_list' %}">Shop Now →</a>
+  &nbsp;|&nbsp; Easy 30-day returns
+</div>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg sticky-top">
   <div class="container">
-    <a class="navbar-brand" href="{% url 'home' %}">MyShop</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+    <a class="navbar-brand" href="{% url 'home' %}">
+      <img src="{% static 'shop/img/logo.svg' %}" alt="MyShop" class="navbar-logo">
+      MyShop
+    </a>
+
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
       aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
-    
+
     <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav me-auto">
+      <ul class="navbar-nav me-auto align-items-lg-center">
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'home' %}">Home</a>
+          <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'home' %}">Home</a>
         </li>
-        
-        <!-- Categories dropdown -->
+        <li class="nav-item">
+          <a class="nav-link {% if '/products/' in request.path %}active{% endif %}" href="{% url 'product_list' %}">Products</a>
+        </li>
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="categoriesDropdown" role="button" data-bs-toggle="dropdown"
-            aria-expanded="false">Categories</a>
+          <a class="nav-link dropdown-toggle" href="#" id="categoriesDropdown" role="button"
+            data-bs-toggle="dropdown" aria-expanded="false">Categories</a>
           <ul class="dropdown-menu" aria-labelledby="categoriesDropdown">
             {% for category in categories %}
-              <li><a class="dropdown-item" href="{% url 'category_products' category.slug %}">{{ category.name }}</a></li>
+              <li>
+                <a class="dropdown-item" href="{% url 'category_products' category.slug %}">
+                  <i class="bi bi-tag"></i> {{ category.name }}
+                </a>
+              </li>
             {% empty %}
-              <li><span class="dropdown-item">No categories</span></li>
+              <li><span class="dropdown-item text-muted">No categories</span></li>
             {% endfor %}
           </ul>
         </li>
       </ul>
 
-      <!-- Search form -->
-      <form class="d-flex me-3" method="get" action="{% url 'search' %}">
-        <input
-          class="form-control me-2"
-          type="search"
-          placeholder="Search products"
-          aria-label="Search"
-          name="q"
-          value="{{ request.GET.q|default:'' }}"
-        />
-        <button class="btn btn-outline-light" type="submit">Search</button>
+      <!-- Search -->
+      <form class="d-flex me-3 my-2 my-lg-0" method="get" action="{% url 'search' %}">
+        <div class="input-group" style="max-width:320px;">
+          <input
+            class="form-control search-input"
+            type="search"
+            placeholder="Search products..."
+            aria-label="Search products"
+            name="q"
+            value="{{ request.GET.q|default:'' }}"
+          />
+          <button class="btn search-btn" type="submit" aria-label="Submit search">
+            <i class="bi bi-search"></i>
+          </button>
+        </div>
       </form>
 
-      <ul class="navbar-nav align-items-center">
-       {% if user.is_authenticated %}
-  <li class="nav-item me-3">
-    <a class="nav-link position-relative" href="{% url 'cart' %}">
-      Cart
-      {% if request.session.cart %}
-        <span class="badge bg-danger position-absolute top-0 start-100 translate-middle rounded-pill">
-          {{ request.session.cart|length }}
-          <span class="visually-hidden">items in cart</span>
-        </span>
-      {% endif %}
-    </a>
-  </li>
-{% endif %}
-
+      <!-- Right nav -->
+      <ul class="navbar-nav align-items-lg-center gap-1">
         {% if user.is_authenticated %}
           <li class="nav-item">
-            <span class="nav-link disabled">Hi, {{ user.username }}</span>
+            <a class="nav-link position-relative" href="{% url 'cart' %}" aria-label="Shopping cart">
+              <i class="bi bi-bag"></i>
+              {% if request.session.cart %}
+                <span class="badge bg-danger cart-badge position-absolute top-0 start-100 translate-middle rounded-pill">
+                  {{ request.session.cart|length }}
+                </span>
+              {% endif %}
+            </a>
           </li>
           <li class="nav-item">
-            <form method="post" action="{% url 'logout' %}" style="display:inline;">
-              {% csrf_token %}
-              <button type="submit" class="btn btn-link nav-link" style="padding: 0; border: none;">Logout</button>
-            </form>
+            <a class="nav-link" href="{% url 'wishlist' %}" aria-label="Wishlist">
+              <i class="bi bi-heart"></i>
+            </a>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#"
+              id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white"
+                style="width:28px;height:28px;font-size:0.7rem;font-weight:700;">
+                {{ user.username|first|upper }}
+              </span>
+              <span class="d-none d-lg-inline">{{ user.username }}</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+              <li>
+                <span class="dropdown-item-text" style="font-size:0.75rem;color:var(--color-text-muted);">
+                  Signed in as <strong>{{ user.username }}</strong>
+                </span>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <a class="dropdown-item" href="{% url 'order_history' %}">
+                  <i class="bi bi-clock-history"></i> My Orders
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="{% url 'wishlist' %}">
+                  <i class="bi bi-heart"></i> Wishlist
+                </a>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <form method="post" action="{% url 'logout' %}">
+                  {% csrf_token %}
+                  <button type="submit" class="dropdown-item text-danger">
+                    <i class="bi bi-box-arrow-right"></i> Sign out
+                  </button>
+                </form>
+              </li>
+            </ul>
           </li>
         {% else %}
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'login' %}">Login</a>
+            <a class="nav-link" href="{% url 'login' %}">Sign in</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'signup' %}">Signup</a>
+            <a class="btn btn-accent btn-sm ms-1" href="{% url 'signup' %}">Get started</a>
           </li>
         {% endif %}
       </ul>
@@ -140,29 +149,95 @@ footer a:hover {
   </div>
 </nav>
 
-<div class="container mt-4">
-  {% block content %}{% endblock %}
+<!-- Flash Messages -->
+{% if messages %}
+  <div class="container mt-3">
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<!-- Page Content -->
+<div class="page-wrapper">
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<footer class="bg-dark text-white py-4 mt-5 fixed-footer">
-  <div class="container text-center">
-    <p class="mb-1">&copy; {% now "Y" %} MyShop. All rights reserved.</p>
-    <small>
-      Designed with ❤️ by MyShop Team | 
-      <a href="#" class="text-white text-decoration-underline">Privacy Policy</a> | 
-      <a href="#" class="text-white text-decoration-underline">Terms of Service</a>
-    </small>
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="row g-4 g-lg-5">
+
+      <!-- Brand -->
+      <div class="col-12 col-lg-4">
+        <div class="footer-brand mb-3">
+          <img src="{% static 'shop/img/logo.svg' %}" alt="" class="footer-logo"> MyShop
+        </div>
+        <p class="footer-tagline">
+          Your one-stop destination for electronics, fashion, groceries, and more.
+          Quality products delivered to your door.
+        </p>
+        <div class="social-links mt-4">
+          <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+          <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+          <a href="#" aria-label="Twitter / X"><i class="bi bi-twitter-x"></i></a>
+          <a href="#" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
+        </div>
+      </div>
+
+      <!-- Categories -->
+      <div class="col-6 col-sm-4 col-lg-2">
+        <h6>Categories</h6>
+        {% for category in categories|slice:":7" %}
+          <a href="{% url 'category_products' category.slug %}">{{ category.name }}</a>
+        {% endfor %}
+        <a href="{% url 'product_list' %}" class="footer-see-all">All categories →</a>
+      </div>
+
+      <!-- Account -->
+      <div class="col-6 col-sm-4 col-lg-2">
+        <h6>My Account</h6>
+        {% if user.is_authenticated %}
+          <a href="{% url 'order_history' %}">My Orders</a>
+          <a href="{% url 'wishlist' %}">Wishlist</a>
+          <a href="{% url 'cart' %}">Cart</a>
+        {% else %}
+          <a href="{% url 'login' %}">Sign In</a>
+          <a href="{% url 'signup' %}">Create Account</a>
+        {% endif %}
+        <a href="{% url 'product_list' %}">Browse Products</a>
+      </div>
+
+      <!-- Help & Legal -->
+      <div class="col-6 col-sm-4 col-lg-2">
+        <h6>Help</h6>
+        <a href="#">Help Center</a>
+        <a href="#">Contact Us</a>
+        <a href="#">Returns &amp; Refunds</a>
+        <a href="#">Shipping Info</a>
+        <h6 class="mt-4">Legal</h6>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+      </div>
+
+    </div>
+
+    <hr class="footer-divider">
+
+    <div class="footer-bottom">
+      <p>&copy; {% now "Y" %} MyShop. All rights reserved.</p>
+      <p>Built with <i class="bi bi-heart-fill" style="color:var(--color-accent);font-size:0.7rem;"></i> using Django &amp; Bootstrap</p>
+    </div>
   </div>
 </footer>
 
-
-<style>
-  footer a:hover {
-    color: #0d6efd; /* Bootstrap primary blue on hover */
-    text-decoration: none;
-  }
-</style>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'shop/js/main.js' %}"></script>
+{% block extra_js %}{% endblock %}
 </body>
 </html>
