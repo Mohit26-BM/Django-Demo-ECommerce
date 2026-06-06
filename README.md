@@ -2,7 +2,7 @@
 
 A full-featured e-commerce web app built with Django 5.2 and Bootstrap 5.
 
-**Live demo:** [https://django-demo-ecommerce.onrender.com/](https://django-demo-ecommerce.onrender.com/)
+**Live demo:** [https://django-demo-ecommerce-h1js.onrender.com\)
 
 ## Tech Stack
 
