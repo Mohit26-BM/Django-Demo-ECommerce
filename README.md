@@ -122,8 +122,7 @@ copy .env.example .env        # Windows   (macOS/Linux: cp .env.example .env)
 ### First run
 
 ```bash
-python manage.py migrate
-python manage.py seed_shop             # 100 products, categories and banners (needs internet)
+python manage.py migrate              # also loads the starter catalogue (100 products, categories, banners)
 python manage.py createsuperuser       # your admin login for /admin/
 python manage.py runserver
 ```
@@ -140,7 +139,7 @@ python manage.py seed_shop --keep-images    # skip re-downloading existing image
 python manage.py seed_shop --if-empty       # do nothing if products already exist
 ```
 
-`seed_shop` refuses to wipe products that customer orders reference (use `--force` to override). When the database has no banners it creates four default ones from `media/banners/`.
+`seed_shop` is only needed to re-download the catalogue from DummyJSON. It refuses to wipe products that customer orders reference (use `--force` to override). When the database has no banners it creates four default ones from `media/banners/`.
 
 ---
 
@@ -154,7 +153,7 @@ Payment is **not integrated with any gateway**. The checkout form lets users cho
 
 `render.yaml` is ready to use: connect the repository and Render builds it.
 
-1. The build installs packages, runs `collectstatic`, applies migrations, seeds the catalogue only if the database is empty, and creates an admin if you set the optional variables below.
+1. The build installs packages, runs `collectstatic`, applies migrations and creates an admin if you set the optional variables below. The migrations load the starter catalogue (from `shop/data/catalog.json`, using the images in `media/`) into an empty database, so a fresh deploy always has products, with no network access needed.
 2. `SECRET_KEY` is generated for you and `DEBUG` is off. The Render host name is added to `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS` automatically.
 3. To get an admin login without a shell, set `DJANGO_SUPERUSER_USERNAME`, `DJANGO_SUPERUSER_EMAIL` and `DJANGO_SUPERUSER_PASSWORD` in the Render dashboard (never in the repository).
 4. WhiteNoise serves static files, and product images are served from the committed `media/` folder.
