@@ -12,11 +12,28 @@ venv/
 # Django
 staticfiles/
 *.log
+db.sqlite3
+*.sqlite3
+*.sqlite3-journal
 
 # Secrets
 .env
 .env.*
+!.env.example
 
-# OS
+# Local notes, tests and AI-tool files stay off GitHub
+_local/
+CLAUDE.md
+AGENTS.md
+.claude/
+shop/tests.py
+shop/tests/
+test_*.py
+*_test.py
+ecommerce/How_To.txt
+
+# OS / editor
 .DS_Store
 Thumbs.db
+.vscode/
+.hintrc

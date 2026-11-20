@@ -47,6 +47,7 @@
 
       <form method="post" novalidate autocomplete="on">
         {% csrf_token %}
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
         {% for field in form %}
           <div class="auth-field">
             <label for="{{ field.id_for_label }}">{{ field.label }}</label>
@@ -90,7 +91,7 @@
 
       <div class="auth-divider"><span>Already have an account?</span></div>
 
-      <a href="{% url 'login' %}" class="btn btn-outline-secondary w-100">
+      <a href="{% url 'login' %}{% if next %}?next={{ next|urlencode }}{% endif %}" class="btn btn-outline-secondary w-100">
         Sign in instead
       </a>
 

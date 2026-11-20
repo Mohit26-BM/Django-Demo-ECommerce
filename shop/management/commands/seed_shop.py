@@ -9,6 +9,10 @@ Usage:
   python manage.py seed_shop --all             # all ~194 products
   python manage.py seed_shop --limit 50        # custom count
   python manage.py seed_shop --keep-banners    # preserve existing banners
+  python manage.py seed_shop --if-empty        # only seed a database with no products
+  python manage.py seed_shop --force           # allow wiping products even if orders exist
+
+Banners: when there are none, three default banners are created from the images in media/banners/.
 """
 
 import json, os, re, shutil
@@ -19,7 +23,31 @@ from django.core.management.base import BaseCommand
 from django.conf import settings
 from django.core.files.base import ContentFile
 
-from shop.models import Category, Product, Banner
+from shop.models import Category, Product, Banner, OrderItem
+
+
+DEFAULT_BANNERS = [
+    {
+        "title": "Biggest Electronics Sale", "subtitle": "Up to 40% off on top brands",
+        "image": "banners/hero-electronics.jpg", "link": "/category/laptops/",
+        "badge_text": "Limited Time", "cta_text": "Shop Electronics",
+    },
+    {
+        "title": "New Fashion Arrivals", "subtitle": "Refresh your wardrobe this season",
+        "image": "banners/hero-fashion.jpg", "link": "/category/mens-shirts/",
+        "badge_text": "New Collection", "cta_text": "Shop Fashion",
+    },
+    {
+        "title": "Find Something New to Love", "subtitle": "Browse the full range, from home to tech",
+        "image": "banners/hero-books.jpg", "link": "/products/",
+        "badge_text": "Just In", "cta_text": "Browse Products",
+    },
+    {
+        "title": "Today's Top Deals", "subtitle": "Great prices on top-rated products",
+        "image": "banners/hero-deals.jpg", "link": "/products/",
+        "badge_text": "Deals", "cta_text": "See All Deals",
+    },
+]
 
 
 # Display name and Bootstrap icon for each DummyJSON category slug
@@ -32,7 +60,7 @@ CATEGORY_META = {
     "kitchen-accessories":  {"name": "Kitchen",             "icon": "bi-cup-hot"},
     "laptops":              {"name": "Laptops",             "icon": "bi-laptop"},
     "mens-shirts":          {"name": "Men's Shirts",        "icon": "bi-person-standing"},
-    "mens-shoes":           {"name": "Men's Shoes",         "icon": "bi-boot"},
+    "mens-shoes":           {"name": "Men's Shoes",         "icon": "bi-person-walking"},
     "mens-watches":         {"name": "Men's Watches",       "icon": "bi-watch"},
     "mobile-accessories":   {"name": "Mobile Accessories",  "icon": "bi-phone"},
     "motorcycle":           {"name": "Motorcycles",         "icon": "bi-bicycle"},
@@ -46,7 +74,7 @@ CATEGORY_META = {
     "womens-bags":          {"name": "Women's Bags",        "icon": "bi-handbag"},
     "womens-dresses":       {"name": "Women's Dresses",     "icon": "bi-heart"},
     "womens-jewellery":     {"name": "Women's Jewellery",   "icon": "bi-gem"},
-    "womens-shoes":         {"name": "Women's Shoes",       "icon": "bi-boot"},
+    "womens-shoes":         {"name": "Women's Shoes",       "icon": "bi-person-walking"},
     "womens-watches":       {"name": "Women's Watches",     "icon": "bi-smartwatch"},
 }
 
@@ -104,11 +132,30 @@ class Command(BaseCommand):
             "--keep-images", action="store_true",
             help="Reuse already-downloaded product images (skip re-downloading)",
         )
+        parser.add_argument(
+            "--if-empty", action="store_true",
+            help="Do nothing when the database already has products (safe to run on every deploy)",
+        )
+        parser.add_argument(
+            "--force", action="store_true",
+            help="Wipe products even though customer orders exist (this deletes those order items)",
+        )
 
     def handle(self, *args, **options):
         limit = 200 if options["all"] else options["limit"]
         keep_banners = options["keep_banners"]
         keep_images = options["keep_images"]
+
+        if options["if_empty"] and Product.objects.exists():
+            self.stdout.write("Products already exist; nothing to seed.")
+            self._ensure_banners()
+            return
+        if OrderItem.objects.exists() and not options["force"]:
+            self.stderr.write(self.style.ERROR(
+                "Refusing to wipe products: customer orders reference them. "
+                "Re-run with --force if you really want to delete those order items."
+            ))
+            return
 
         # ── Wipe old data ─────────────────────────────────────────────────
         self.stdout.write("Clearing products and categories...")
@@ -211,8 +258,20 @@ class Command(BaseCommand):
             tick = self.style.SUCCESS("[img]") if product.image else "[   ]"
             self.stdout.write(f"  {tick} {item['title']}")
 
+        self._ensure_banners()
         self.stdout.write(self.style.SUCCESS(
             f"\nDone! Seeded {len(cat_map)} categories and {created} products "
             f"({featured_count} featured).\n"
-            f"Banners: {'preserved (--keep-banners)' if keep_banners else 'cleared'}.\n"
         ))
+
+    def _ensure_banners(self):
+        """Create the default banners when there are none (uses the committed images)."""
+        if Banner.objects.exists():
+            return
+        made = 0
+        for order, spec in enumerate(DEFAULT_BANNERS, start=1):
+            if not os.path.exists(os.path.join(settings.MEDIA_ROOT, spec["image"])):
+                continue
+            Banner.objects.create(order=order, is_active=True, **spec)
+            made += 1
+        self.stdout.write(f"Created {made} default banners.")

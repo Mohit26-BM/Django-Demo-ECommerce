@@ -2,14 +2,14 @@
 
 A full-featured e-commerce web app built with Django 5.2 and Bootstrap 5.
 
-**Live demo:** [https://django-demo-ecommerce-h1js.onrender.com\)
+**Live demo:** [https://django-demo-ecommerce-h1js.onrender.com](https://django-demo-ecommerce-h1js.onrender.com)
 
 ## Tech Stack
 
 | Layer | Technology |
 | --- | --- |
-| Backend | Python 3.12, Django 5.2 |
-| Database | SQLite (dev) / PostgreSQL-ready (psycopg2 included) |
+| Backend | Python 3.12, Django 5.2 (LTS) |
+| Database | SQLite (add `psycopg2-binary` and a `DATABASES` change to use PostgreSQL) |
 | Frontend | Bootstrap 5.3, Bootstrap Icons, Inter font |
 | Static files | WhiteNoise |
 | Production server | Gunicorn |
@@ -102,23 +102,33 @@ ecommerce/
 
 ### Prerequisites
 
-- Python 3.10+ (or activate your conda base)
-- The packages in `requirements.txt`
+- Python 3.12 (a conda environment works fine)
+- The four packages in `requirements.txt`: Django, gunicorn, Pillow, WhiteNoise
 
 ```bash
 pip install -r requirements.txt
 ```
 
+### Local configuration
+
+Copy the example settings file once. `.env` is git-ignored and never published.
+
+```bash
+copy .env.example .env        # Windows   (macOS/Linux: cp .env.example .env)
+```
+
+`.env.example` turns on `DEBUG` for local work. Without a `.env` the app starts in production mode and asks for a `SECRET_KEY`.
+
 ### First run
 
 ```bash
 python manage.py migrate
-python manage.py createsuperuser       # for /admin access
-python manage.py seed_shop             # seeds 100 products from DummyJSON API
+python manage.py seed_shop             # 100 products, categories and banners (needs internet)
+python manage.py createsuperuser       # your admin login for /admin/
 python manage.py runserver
 ```
 
-Open `http://127.0.0.1:8000`
+Open `http://127.0.0.1:8000`. No user accounts are created for you and none are stored in the repository: sign up on the site, or create your admin with `createsuperuser`.
 
 ### Seed options
 
@@ -127,7 +137,10 @@ python manage.py seed_shop             # 100 products (default)
 python manage.py seed_shop --all       # all ~194 products
 python manage.py seed_shop --keep-banners   # don't overwrite banner data
 python manage.py seed_shop --keep-images    # skip re-downloading existing images
+python manage.py seed_shop --if-empty       # do nothing if products already exist
 ```
+
+`seed_shop` refuses to wipe products that customer orders reference (use `--force` to override). When the database has no banners it creates four default ones from `media/banners/`.
 
 ---
 
@@ -139,14 +152,21 @@ Payment is **not integrated with any gateway**. The checkout form lets users cho
 
 ## Deployment (Render.com)
 
-1. Set `DEBUG=False` and `ALLOWED_HOSTS=your-app.onrender.com` in environment variables
-2. Set a strong `SECRET_KEY`
-3. The build command in `render.yaml` runs `collectstatic` and `migrate` automatically
-4. WhiteNoise serves static files in production — no separate CDN needed
+`render.yaml` is ready to use: connect the repository and Render builds it.
 
-> Media files (product images) are **not persistent** on Render's free tier. For production use an object store like AWS S3 or Cloudflare R2.
+1. The build installs packages, runs `collectstatic`, applies migrations, seeds the catalogue only if the database is empty, and creates an admin if you set the optional variables below.
+2. `SECRET_KEY` is generated for you and `DEBUG` is off. The Render host name is added to `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS` automatically.
+3. To get an admin login without a shell, set `DJANGO_SUPERUSER_USERNAME`, `DJANGO_SUPERUSER_EMAIL` and `DJANGO_SUPERUSER_PASSWORD` in the Render dashboard (never in the repository).
+4. WhiteNoise serves static files, and product images are served from the committed `media/` folder.
 
----
+> **Free-tier note:** Render's free disk is not persistent. The SQLite database (accounts, orders) is recreated on every deploy, and images uploaded through the admin are lost. For real use, attach a persistent disk and set `SQLITE_PATH`, or move to PostgreSQL and an object store such as S3 or Cloudflare R2.
+
+## Security notes
+
+- Production defaults: debug off, HTTPS redirect with the proxy header honoured, secure cookies, HSTS, `nosniff`, frame denial.
+- Cart quantities are validated and capped at 20; checkout is one database transaction; hidden (inactive) products cannot be viewed, searched or bought.
+- Wishlist changes and sign-out are POST-only. `?next=` redirects only go to this site. Repeated failed logins for one account are throttled.
+- Orders can only be changed by their owner.
 
 ## Author
 

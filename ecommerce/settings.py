@@ -1,16 +1,59 @@
 from pathlib import Path
 import os
 
+from django.core.exceptions import ImproperlyConfigured
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get(
-    "SECRET_KEY",
-    "django-insecure-dev-only-change-in-production-do-not-commit"
-)
 
-DEBUG = os.environ.get("DEBUG", "True") == "True"
+def _load_dotenv(path: Path) -> None:
+    """Load KEY=VALUE lines from a local .env file (never committed).
+    Real environment variables always win over the file."""
+    if not path.is_file():
+        return
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        os.environ.setdefault(key.strip(), value.strip().strip("\"'"))
 
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+
+_load_dotenv(BASE_DIR / ".env")
+
+
+def _env_list(name: str, default: str = "") -> list[str]:
+    return [item.strip() for item in os.environ.get(name, default).split(",") if item.strip()]
+
+
+# Safe by default: debug mode is only on when explicitly requested.
+DEBUG = os.environ.get("DEBUG", "False").strip().lower() in ("1", "true", "yes", "on")
+
+SECRET_KEY = os.environ.get("SECRET_KEY", "")
+if not SECRET_KEY:
+    if DEBUG:
+        # Local development only. Never used when DEBUG is off.
+        SECRET_KEY = "django-insecure-local-development-key-do-not-use-in-production"
+    else:
+        raise ImproperlyConfigured(
+            "SECRET_KEY is not set. For local development copy .env.example to .env "
+            "(it sets DEBUG=True). In production set SECRET_KEY in the environment."
+        )
+
+# Hosts: local ones in debug, plus anything listed in ALLOWED_HOSTS, plus the hostname
+# Render provides automatically (RENDER_EXTERNAL_HOSTNAME).
+ALLOWED_HOSTS = _env_list("ALLOWED_HOSTS")
+_render_host = os.environ.get("RENDER_EXTERNAL_HOSTNAME", "").strip()
+if _render_host:
+    ALLOWED_HOSTS.append(_render_host)
+if DEBUG:
+    ALLOWED_HOSTS += ["localhost", "127.0.0.1", "[::1]"]
+if not DEBUG and not ALLOWED_HOSTS:
+    raise ImproperlyConfigured("Set ALLOWED_HOSTS (comma separated) when DEBUG is off.")
+
+CSRF_TRUSTED_ORIGINS = _env_list("CSRF_TRUSTED_ORIGINS")
+if _render_host:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{_render_host}")
 
 LOGIN_URL = "/login/"
 LOGIN_REDIRECT_URL = "/"
@@ -57,10 +100,11 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "ecommerce.wsgi.application"
 
+# SQLITE_PATH lets a host put the database on a persistent disk.
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": os.environ.get("SQLITE_PATH") or (BASE_DIR / "db.sqlite3"),
     }
 }
 
@@ -84,13 +128,28 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Production security settings (active when DEBUG=False)
+# Cart limits (used by views and checkout)
+MAX_CART_QUANTITY = 20
+
+# Login throttling: failed attempts allowed per username+address within the window
+LOGIN_MAX_ATTEMPTS = 5
+LOGIN_ATTEMPT_WINDOW = 15 * 60  # seconds
+
+# Always on: these are safe in debug mode too
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = "DENY"
+SECURE_REFERRER_POLICY = "same-origin"
+
+# Production security settings (active when DEBUG is off)
 if not DEBUG:
+    # Render (and most hosts) terminate TLS at a proxy and forward the original scheme.
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-    SECURE_BROWSER_XSS_FILTER = True
-    X_FRAME_OPTIONS = "DENY"

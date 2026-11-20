@@ -1,15 +1,25 @@
 services:
   - type: web
     name: ecommerce
-    env: python
-    buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate"
+    runtime: python
+    buildCommand: >-
+      pip install -r requirements.txt &&
+      python manage.py collectstatic --noinput &&
+      python manage.py migrate --noinput &&
+      python manage.py seed_shop --if-empty --keep-images &&
+      (python manage.py createsuperuser --noinput || true)
     startCommand: gunicorn ecommerce.wsgi:application
     envVars:
-      - key: DJANGO_SETTINGS_MODULE
-        value: ecommerce.settings
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: DEBUG
+        value: "False"
       - key: SECRET_KEY
         generateValue: true
-      - key: DEBUG
-        value: False
-      - key: ALLOWED_HOSTS
-        value: YOUR_RENDER_DOMAIN
+      # Optional: set these in the Render dashboard (never in this file) to create an admin on deploy.
+      - key: DJANGO_SUPERUSER_USERNAME
+        sync: false
+      - key: DJANGO_SUPERUSER_EMAIL
+        sync: false
+      - key: DJANGO_SUPERUSER_PASSWORD
+        sync: false

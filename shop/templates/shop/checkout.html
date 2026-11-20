@@ -1,4 +1,5 @@
 {% extends "shop/base.html" %}
+{% load shop_extras %}
 
 {% block title %}Checkout — MyShop{% endblock %}
 
@@ -58,7 +59,7 @@
                 </p>
               </div>
               <span style="font-weight:700;font-size:var(--font-size-sm);color:var(--color-primary);white-space:nowrap;">
-                ₹{{ item.item_total }}
+                {{ item.item_total|inr }}
               </span>
             </div>
           {% endfor %}
@@ -114,7 +115,7 @@
               <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;">
                 {{ item.product.name }}
               </span>
-              <span>₹{{ item.item_total }}</span>
+              <span>{{ item.item_total|inr }}</span>
             </div>
           {% endfor %}
 
@@ -125,7 +126,7 @@
 
           <div class="summary-row total">
             <span>Total Amount</span>
-            <span>₹{{ total }}</span>
+            <span>{{ total|inr }}</span>
           </div>
 
           <button type="submit" class="btn btn-success w-100 btn-lg mt-4">

@@ -5,7 +5,7 @@
 /* ── Qty controls ─────────────────────────────────────────── */
 function adjustQty(btn, delta) {
   const input = btn.closest('.qty-controls').querySelector('.qty-input');
-  input.value = Math.max(1, Math.min(99, parseInt(input.value || 1) + delta));
+  input.value = Math.max(1, Math.min(20, parseInt(input.value || 1) + delta));
   input.classList.add('qty-bump');
   setTimeout(() => input.classList.remove('qty-bump'), 200);
 }

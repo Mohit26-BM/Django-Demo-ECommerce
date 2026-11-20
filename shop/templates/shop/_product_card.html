@@ -1,3 +1,4 @@
+{% load shop_extras %}
 <div class="product-card">
   <div class="product-img-wrap">
     {% if product.discount_percent %}
@@ -18,10 +19,10 @@
       <span class="rating-pill"><i class="bi bi-star-fill"></i> {{ product.rating }}</span>
       <span class="review-count">({{ product.review_count|floatformat:0 }})</span>
     </div>
-    <p class="product-price" style="margin-bottom:2px;">₹{{ product.price }}</p>
+    <p class="product-price" style="margin-bottom:2px;">{{ product.price|inr }}</p>
     {% if product.original_price %}
       <p style="font-size:var(--font-size-xs);color:var(--color-text-muted);text-decoration:line-through;margin-bottom:var(--space-2);">
-        ₹{{ product.original_price }}
+        {{ product.original_price|inr }}
       </p>
     {% endif %}
     <div class="product-actions">
@@ -36,7 +37,7 @@
           </button>
         </form>
       {% else %}
-        <a href="{% url 'login' %}" class="btn btn-success btn-sm flex-1">
+        <a href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}" class="btn btn-success btn-sm flex-1">
           <i class="bi bi-bag-plus"></i> Add
         </a>
       {% endif %}

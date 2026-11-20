@@ -1,4 +1,5 @@
 {% extends "shop/base.html" %}
+{% load shop_extras %}
 {% load static %}
 
 {% block title %}MyShop — Shop Everything You Love{% endblock %}
@@ -160,9 +161,9 @@
             <span class="rating-pill"><i class="bi bi-star-fill"></i> {{ product.rating }}</span>
             <span class="review-count">({{ product.review_count|floatformat:0 }})</span>
           </div>
-          <p class="product-price" style="margin-bottom:var(--space-1);">₹{{ product.price }}</p>
+          <p class="product-price" style="margin-bottom:var(--space-1);">{{ product.price|inr }}</p>
           {% if product.original_price %}
-            <p class="original-price-text mb-0">₹{{ product.original_price }}</p>
+            <p class="original-price-text mb-0">{{ product.original_price|inr }}</p>
           {% endif %}
           <div class="product-actions mt-2">
             <a href="{% url 'product_detail' product.pk %}" class="btn btn-outline-primary btn-sm">

@@ -513,3 +513,25 @@
   .category-strip-item { flex: 1 1 calc(33% - 1px); border-bottom: 1px solid var(--color-border); }
   .deals-banner { flex-direction: column; text-align: center; }
 }
+
+/* ---- Polish fixes ---- */
+/* The search box sits on a white field, so its text and placeholder must be dark */
+.navbar .search-input {
+  background: #fff;
+  color: var(--color-text);
+  border-color: rgba(255,255,255,.35);
+}
+.navbar .search-input::placeholder { color: var(--color-text-muted); opacity: 1; }
+.navbar .search-input:focus { background: #fff; color: var(--color-text); border-color: var(--color-accent); }
+
+/* Keep the banner text clear of the previous/next arrows */
+@media (min-width: 769px) {
+  .hero-carousel .carousel-caption { padding-left: calc(var(--space-10) + 44px + var(--space-3)); }
+}
+
+/* Cards in a scrolling row all stretch to the same height */
+.product-scroller { align-items: stretch; }
+.product-scroller .product-card { height: auto; }
+
+/* Wishlist remove is now a form button */
+button.wishlist-remove { padding: 0; font-family: inherit; }

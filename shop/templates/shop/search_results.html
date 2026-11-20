@@ -1,4 +1,5 @@
 {% extends "shop/base.html" %}
+{% load shop_extras %}
 
 {% block title %}
   {% if query %}Search: "{{ query }}"{% else %}Search{% endif %} — MyShop
@@ -29,7 +30,7 @@
           <div class="card-body">
             <p class="product-detail-category">{{ product.category.name }}</p>
             <h6 class="product-name">{{ product.name }}</h6>
-            <p class="product-price">₹{{ product.price }}</p>
+            <p class="product-price">{{ product.price|inr }}</p>
             <div class="product-actions">
               <a href="{% url 'product_detail' product.pk %}" class="btn btn-outline-primary btn-sm">
                 <i class="bi bi-eye"></i> View
